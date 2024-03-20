@@ -1,0 +1,253 @@
+/* The content strategy team needs a list of all tv shows on Netflix with at least a 7.0 score on IMDb and at least a 75 
+Rotten Tomatoes score for shows released after our inception. Sort by the score from largest to smallest, then by the title name from A to Z. */
+select title,
+netflix,
+imdb,
+rotten_tomatoes,
+year
+from streaming_shows
+where netflix = '1' and imdb >= 7.0 and rotten_tomatoes >= 75 and year > 1997
+order by rotten_tomatoes desc, title asc
+
+
+/* 25 longest movies outside of our top markets released prior to the pandemic */
+select type,
+title,
+country,
+release_year,
+duration
+from titles
+where release_year < 2020 and (country not like '%United States%' and country not like '%Canada%')
+and type = 'Movie'
+order by duration desc 
+limit 25
+
+
+/* Return the following information for wholesale candles purchased at malls and outlets for customers who have been with us for at least 1 year 
+(Do not include candles that have been returned; Returned items have a negative quantity):
+ Client name
+Onboard date
+Onboard year
+ How long the client has been a customer
+Transaction number
+Transaction date
+Transaction day of the week
+Transaction month
+Transaction quarter
+Transaction year
+Customer ID number
+Location
+Quantity
+Price
+Transaction amount including the wholesale discount
+Invoice due date (Transaction date + net terms)
+Month of invoice due date
+Year of invoice due date
+*/
+
+select 
+customer_name.client,
+customer_name.onboard_date,
+year(customer_name.onboard_date) as onboard_year,
+datediff(year,customer_name.onboard_date,getdate()) as Cust_Tenure,
+shopping_mall.invoice_no,
+shopping_mall.transaction_date,
+dayname(shopping_mall.transaction_date) as Trans_DOW,
+monthname(shopping_mall.transaction_date) as Trans_month,
+quarter(shopping_mall.transaction_date) as Trans_QTR,
+year(shopping_mall.transaction_date) as Trans_Year,
+shopping_mall.customer_id as Cust_ID,
+shopping_mall.shopping_mall as Location,
+shopping_mall.quantity as Quantity,
+shopping_mall.price,
+wholesale_discount.discount,
+
+DATEADD(day,online_invoice.net_terms,shopping_mall.transaction_date) as Invoice_due_date,
+monthname(DATEADD(day,online_invoice.net_terms,shopping_mall.transaction_date)) as Due_Month,
+year(DATEADD(day,online_invoice.net_terms,shopping_mall.transaction_date)) as Due_Year
+
+
+from shopping_mall left join online_invoice on online_invoice.invoice=shopping_mall.invoice_no
+left join wholesale_discount on wholesale_discount.item_name=shopping_mall.description
+left join customer_name on customer_name.customerid=shopping_mall.customer_id
+
+where datediff(year,customer_name.onboard_date,getdate()) >= 1
+and shopping_mall.quantity >= 0
+
+
+
+
+
+
+/* What Does This Query Say?
+
+CREATE TABLE customers (
+    customer_id INT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    city VARCHAR(50)
+);
+
+CREATE TABLE orders (
+    order_id INT,
+    customer_id INT,
+    order_date DATE,
+    total_amount FLOAT
+);
+
+CREATE TABLE products (
+    product_id INT,
+    product_name VARCHAR(100),
+    category VARCHAR(50)
+);
+
+INSERT INTO customers (customer_id, first_name, last_name, city)
+VALUES
+    (1, 'John', 'Doe', 'New York'),
+    (2, 'Jane', 'Smith', 'Los Angeles'),
+    (3, 'Michael', 'Johnson', 'Chicago');
+
+INSERT INTO orders (order_id, customer_id, order_date, total_amount)
+VALUES
+    (101, 1, '2023-09-20', 150.00),
+    (102, 2, '2023-09-21', 200.50),
+    (103, 1, '2023-09-22', 100.75),
+    (104, 3, '2023-09-23', 300.20);
+
+INSERT INTO products (product_id, product_name, category)
+VALUES
+    (501, 'Laptop', 'Electronics'),
+    (502, 'Smartphone', 'Electronics'),
+    (503, 'T-Shirt', 'Apparel'),
+    (504, 'Shoes', 'Apparel');
+*/
+
+the query is creating 3 tables, each with their own unique fields and data.
+
+(table 1) - is titled "Customers"
+it has 4 fields, they are titled: Cust_ID, First name, last name & City
+
+(Table 2) - is titled "Orders"
+it has 4 fields: Order_ID, Cust_ID, Order_Date, Total Amt
+
+(Table 3) is titled "Products"
+it has 3 fields: ID, Name, Cateory
+
+the 3 "INSERT INTO" sections are adding in the details of each table to their respective fields.
+
+
+
+
+
+
+
+/*  SELECT
+residentID,
+residentfirst,
+residentlast,
+census_date_taken,   
+region,
+year(census_date_taken),
+population_count,
+population_count*1.03,
+population_count*.03,
+DATEADD(year, 1, GETDATE()) as Census_Release_Year
+FROM population_data
+*/
+
+data is being pulled from the 'population_data' table. the select statement is pulling:
+- residentid
+- first name
+- last name
+- census date taken
+- region
+- census date year
+- population count
+- population count w/ 3% increase
+- population count w/ 3% subtracted 
+- DATEADD functon is adding 1 year to the current date
+
+
+/*
+SELECT
+    customers.first_name,
+    customers.last_name,
+    orders.order_id,
+    orders.order_date,
+    products.product_name,
+    orders.total_amount
+FROM
+    customers
+INNER JOIN
+    orders ON customers.customer_id = orders.customer_id
+INNER JOIN
+    products ON orders.product_id = products.product_id
+WHERE
+    customers.city = 'New York'
+    AND orders.order_date BETWEEN '2023-09-20' AND '2023-09-23'
+    AND (products.category not like '%Electronics%' and products.category not like '%Accessories%')
+ORDER BY orders.total_amount DESC
+LIMIT 10  */
+
+this query is inner joining 3 tables: 'customers', 'orders', 'products'. 
+- customers and orders are joined on customer id
+- products is joined on orders product id 
+
+the select statement is pulling:
+- first & last name from customers table
+- id, date, total amount from orders table
+- product name from products table
+
+there are multiple filters:
+- customers in New York
+- order date between 09-20-2023 and 09-23-2023
+- no results with 'electronics'  and  'accessories' on the products table in category field
+
+order results in descending order by the total amount from the 'orders' table
+
+only show the first 10 results
+
+
+
+
+
+
+/*  Our SVP of HR wants to give everyone a 10% COLA (cost of living adjustment). Can you please provide me with the following for each employee:
+
+Current salary
+New salary with the 10% COLA increase
+The amount of the 10% COLA
+*/
+
+select 
+employee_id,
+hourly_rate,
+hourly_rate*1.10 as Rate_w_Inc,
+hourly_rate*1.10-hourly_rate as increase_amt
+from employee_demographics
+
+/*  The new Content Director, is looking to do some market analysis for our content team. He is looking for a list of all customers (names and IDs included) who aren’t 
+email subscribers, along with the monthly and annual revenue for each of these customers.For these customers, he wants to know the total content size for movies and TV 
+shows combined based on the country they reside in. Be sure to include both the country name and abbreviation because the team he will bring this to can only see the 
+country abbreviations in their system.  */
+
+select userbase.user_id as UserID,
+email_sub.id as SubID,
+sub_demo.sub_fname,
+sub_demo.sub_lname,
+userbase.country as UserCountry,
+netflix_prices.code as CountryCode,
+userbase.monthly_revenue,
+userbase.monthly_revenue * 12 as AnnualRevenue,
+netflix_countries.no_of_movies,
+netflix_countries.no_of_tv_shows,
+netflix_countries.no_of_movies+netflix_countries.no_of_tv_shows as TotalContentSize
+
+from email_sub right join userbase on userbase.user_id=email_sub.id
+left join sub_demo on sub_demo.sub_id=userbase.user_id
+left join netflix_countries on netflix_countries.country=userbase.country
+right join netflix_prices on netflix_prices.country=netflix_countries.country
+
+where email_sub.id is null
+
+
